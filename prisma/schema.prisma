@@ -1,0 +1,316 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth ────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  EDITOR
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  role          Role      @default(EDITOR)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  passwordResets PasswordReset[]
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expires   DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+// ─── CMS ─────────────────────────────────────────────────
+
+model HeroContent {
+  id               String   @id @default(cuid())
+  badge            String?
+  headline         String
+  subline          String
+  ctaPrimary       String
+  ctaPrimaryHref   String?
+  ctaSecondary     String
+  ctaSecondaryHref String?
+  stats            Json?
+  updatedAt        DateTime @updatedAt
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String   @db.Text
+  icon        String?
+  order       Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+  @@index([order])
+}
+
+model PortfolioProject {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  category    String
+  services    String[]
+  description String   @db.Text
+  result      String?
+  coverImage  String?
+  images      String[]
+  published   Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+  @@index([category])
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  quote     String   @db.Text
+  name      String
+  role      String
+  company   String?
+  industry  String?
+  avatar    String?
+  published Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FAQ {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String   @db.Text
+  category  String?
+  order     Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  name      String
+  role      String
+  title     String?
+  bio       String?  @db.Text
+  image     String?
+  linkedin  String?
+  stats     Json?
+  isFounder Boolean  @default(false)
+  order     Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  content     String   @db.Text
+  coverImage  String?
+  published   Boolean  @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  seo SeoMeta?
+
+  @@index([slug])
+  @@index([publishedAt])
+}
+
+model Career {
+  id           String   @id @default(cuid())
+  title        String
+  department   String
+  type         String   // full-time, part-time, contract
+  location     String
+  description  String   @db.Text
+  requirements String   @db.Text
+  published    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications CareerApplication[]
+}
+
+// ─── Forms / Submissions ─────────────────────────────────
+
+enum LeadStatus {
+  NEW
+  IN_PROGRESS
+  CLOSED
+}
+
+model ContactSubmission {
+  id           String     @id @default(cuid())
+  name         String
+  company      String?
+  email        String
+  phone        String?
+  industry     String?
+  service      String?
+  budget       String?
+  message      String     @db.Text
+  sourcePage   String?
+  status       LeadStatus @default(NEW)
+  notes        String?    @db.Text
+  ip           String?
+  userAgent    String?
+  read         Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+
+  @@index([createdAt])
+  @@index([read])
+  @@index([status])
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model CareerApplication {
+  id        String   @id @default(cuid())
+  careerId  String
+  name      String
+  email     String
+  phone     String?
+  message   String?  @db.Text
+  resumeUrl String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  career Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
+
+  @@index([careerId])
+  @@index([createdAt])
+}
+
+// ─── Media ───────────────────────────────────────────────
+
+model MediaFile {
+  id        String   @id @default(cuid())
+  name      String
+  url       String
+  key       String   @unique  // UploadThing file key
+  size      Int
+  type      String
+  folder    String?
+  createdAt DateTime @default(now())
+
+  @@index([folder])
+  @@index([type])
+}
+
+// ─── SEO ─────────────────────────────────────────────────
+
+model SeoMeta {
+  id          String   @id @default(cuid())
+  page        String?  @unique  // null = belongs to a blog post
+  blogPostId  String?  @unique
+  title       String?
+  description String?
+  ogTitle     String?
+  ogDesc      String?
+  ogImage     String?
+  twitterCard String?
+  canonical   String?
+  robots      String?
+  schema      String?  @db.Text
+  updatedAt   DateTime @updatedAt
+
+  blogPost BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+}
+
+// ─── Site Settings ───────────────────────────────────────
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+}

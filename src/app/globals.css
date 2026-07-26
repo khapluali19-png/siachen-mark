@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Brand colors — monochromatic navy, no secondary color */
+  --color-navy: #0a1e6e;
+  --color-navy-bright: #0035ca;
+  --color-navy-dim: #1a2f8a;
+  --color-off-white: #f4f5f9;
+  --color-background: #ffffff;
+  --color-foreground: #10151f;
+  --color-muted: #4b5563;
+  --color-border: #e5e7eb;
+  --color-on-navy: #c9d4ff;
+
+  /* Typography */
+  --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+
+  /* Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(10 30 110 / 0.05);
+  --shadow-md: 0 4px 12px -2px rgb(10 30 110 / 0.10);
+  --shadow-lg: 0 12px 32px -8px rgb(10 30 110 / 0.18);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-navy-bright);
+  outline-offset: 2px;
+}
+
+/* ── Keyframes ─────────────────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-18px); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50%       { transform: translateY(-12px) rotate(4deg); }
+}
+@keyframes blob-move {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  50%       { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+}
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Utility animation classes ─────────────────────────── */
+.animate-float      { animation: float 5s ease-in-out infinite; }
+.animate-float-slow { animation: float-slow 7s ease-in-out infinite; }
+.animate-blob       { animation: blob-move 8s ease-in-out infinite; }
+.animate-fade-up    { animation: fade-up 0.7s ease both; }
+.animate-fade-in    { animation: fade-in 0.6s ease both; }
+.animate-marquee    { animation: marquee 28s linear infinite; }
+.animate-spin-slow  { animation: spin-slow 18s linear infinite; }
+
+/* scroll-reveal: hidden until JS adds .revealed */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
