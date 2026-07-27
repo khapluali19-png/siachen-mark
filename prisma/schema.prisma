@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,27 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── Auth ────────────────────────────────────────────────
-
-enum Role {
-  ADMIN
-  EDITOR
-}
-
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  password      String?
-  role          Role      @default(EDITOR)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  accounts Account[]
-  sessions Session[]
+  id             String          @id @default(cuid())
+  name           String?
+  email          String          @unique
+  emailVerified  DateTime?
+  password       String?
+  role           Role            @default(EDITOR)
+  image          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  accounts       Account[]
   passwordResets PasswordReset[]
+  sessions       Session[]
 
   @@index([email])
 }
@@ -41,15 +30,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
@@ -60,8 +48,7 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -81,33 +68,30 @@ model PasswordReset {
   expires   DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([userId])
 }
 
-// ─── CMS ─────────────────────────────────────────────────
-
 model HeroContent {
   id               String   @id @default(cuid())
-  badge            String?
   headline         String
   subline          String
   ctaPrimary       String
-  ctaPrimaryHref   String?
   ctaSecondary     String
+  updatedAt        DateTime @updatedAt
+  badge            String?
+  ctaPrimaryHref   String?
   ctaSecondaryHref String?
   stats            Json?
-  updatedAt        DateTime @updatedAt
 }
 
 model Service {
   id          String   @id @default(cuid())
   title       String
   slug        String   @unique
-  description String   @db.Text
+  description String
   icon        String?
   order       Int      @default(0)
   published   Boolean  @default(true)
@@ -124,7 +108,7 @@ model PortfolioProject {
   slug        String   @unique
   category    String
   services    String[]
-  description String   @db.Text
+  description String
   result      String?
   coverImage  String?
   images      String[]
@@ -139,7 +123,7 @@ model PortfolioProject {
 
 model Testimonial {
   id        String   @id @default(cuid())
-  quote     String   @db.Text
+  quote     String
   name      String
   role      String
   company   String?
@@ -154,7 +138,7 @@ model Testimonial {
 model FAQ {
   id        String   @id @default(cuid())
   question  String
-  answer    String   @db.Text
+  answer    String
   category  String?
   order     Int      @default(0)
   published Boolean  @default(true)
@@ -166,76 +150,66 @@ model TeamMember {
   id        String   @id @default(cuid())
   name      String
   role      String
-  title     String?
-  bio       String?  @db.Text
+  bio       String?
   image     String?
   linkedin  String?
-  stats     Json?
   isFounder Boolean  @default(false)
   order     Int      @default(0)
   published Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  stats     Json?
+  title     String?
 }
 
 model BlogPost {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
-  slug        String   @unique
+  slug        String    @unique
   excerpt     String?
-  content     String   @db.Text
+  content     String
   coverImage  String?
-  published   Boolean  @default(false)
+  published   Boolean   @default(false)
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  seo SeoMeta?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  seo         SeoMeta?
 
   @@index([slug])
   @@index([publishedAt])
 }
 
 model Career {
-  id           String   @id @default(cuid())
+  id           String              @id @default(cuid())
   title        String
   department   String
-  type         String   // full-time, part-time, contract
+  type         String
   location     String
-  description  String   @db.Text
-  requirements String   @db.Text
-  published    Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
+  description  String
+  requirements String
+  published    Boolean             @default(true)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
   applications CareerApplication[]
 }
 
-// ─── Forms / Submissions ─────────────────────────────────
-
-enum LeadStatus {
-  NEW
-  IN_PROGRESS
-  CLOSED
-}
-
 model ContactSubmission {
-  id           String     @id @default(cuid())
-  name         String
-  company      String?
-  email        String
-  phone        String?
-  industry     String?
-  service      String?
-  budget       String?
-  message      String     @db.Text
-  sourcePage   String?
-  status       LeadStatus @default(NEW)
-  notes        String?    @db.Text
-  ip           String?
-  userAgent    String?
-  read         Boolean    @default(false)
-  createdAt    DateTime   @default(now())
+  id         String     @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  industry   String?
+  service    String?
+  message    String
+  ip         String?
+  userAgent  String?
+  read       Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+  budget     String?
+  company    String?
+  notes      String?
+  sourcePage String?
+  status     LeadStatus @default(NEW)
 
   @@index([createdAt])
   @@index([read])
@@ -257,24 +231,21 @@ model CareerApplication {
   name      String
   email     String
   phone     String?
-  message   String?  @db.Text
+  message   String?
   resumeUrl String?
   ip        String?
   createdAt DateTime @default(now())
-
-  career Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  career    Career   @relation(fields: [careerId], references: [id], onDelete: Cascade)
 
   @@index([careerId])
   @@index([createdAt])
 }
 
-// ─── Media ───────────────────────────────────────────────
-
 model MediaFile {
   id        String   @id @default(cuid())
   name      String
   url       String
-  key       String   @unique  // UploadThing file key
+  key       String   @unique
   size      Int
   type      String
   folder    String?
@@ -284,12 +255,10 @@ model MediaFile {
   @@index([type])
 }
 
-// ─── SEO ─────────────────────────────────────────────────
-
 model SeoMeta {
-  id          String   @id @default(cuid())
-  page        String?  @unique  // null = belongs to a blog post
-  blogPostId  String?  @unique
+  id          String    @id @default(cuid())
+  page        String?   @unique
+  blogPostId  String?   @unique
   title       String?
   description String?
   ogTitle     String?
@@ -298,19 +267,27 @@ model SeoMeta {
   twitterCard String?
   canonical   String?
   robots      String?
-  schema      String?  @db.Text
-  updatedAt   DateTime @updatedAt
-
-  blogPost BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  schema      String?
+  updatedAt   DateTime  @updatedAt
+  blogPost    BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
 }
-
-// ─── Site Settings ───────────────────────────────────────
 
 model SiteSetting {
   id        String   @id @default(cuid())
   key       String   @unique
-  value     String   @db.Text
+  value     String
   updatedAt DateTime @updatedAt
 
   @@index([key])
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+}
+
+enum LeadStatus {
+  NEW
+  IN_PROGRESS
+  CLOSED
 }

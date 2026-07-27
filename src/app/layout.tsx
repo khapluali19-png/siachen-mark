@@ -5,6 +5,7 @@ import "./globals.css";
 import ScrollReveal from "@/components/layout/ScrollReveal";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/JsonLd";
 import Analytics from "@/components/analytics/Analytics";
+import AdminProviders from "@/components/admin/AdminProviders";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -37,12 +38,16 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${montserrat.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
+     <AdminProviders>
         <OrganizationJsonLd />
-        <WebSiteJsonLd />
-        <Suspense fallback={null}><Analytics /></Suspense>
-        <ScrollReveal />
+       <WebSiteJsonLd />
+       <Suspense fallback={null}>
+       <Analytics />
+       </Suspense>
+       <ScrollReveal />
         {children}
-      </body>
+       </AdminProviders>
+   </body>
     </html>
   );
 }
