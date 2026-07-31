@@ -1,6 +1,8 @@
 import { MetadataRoute } from "next";
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://siachenmark.com";
+const BASE =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  "https://siachen-mark.vercel.app";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -8,10 +10,15 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/dashboard", "/api", "/login", "/reset-password"],
+        disallow: [
+          "/dashboard",
+          "/api",
+          "/login",
+          "/reset-password",
+        ],
       },
     ],
-    sitemap: `${BASE}/sitemap.xml`,
     host: BASE,
+    sitemap: `${BASE}/sitemap.xml`,
   };
 }
