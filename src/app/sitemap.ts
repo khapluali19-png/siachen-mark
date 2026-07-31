@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 import { db } from "@/lib/db";
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://siachenmark.com";
+const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://siachen-mark.vercel.app";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
