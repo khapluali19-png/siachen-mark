@@ -6,6 +6,12 @@ import Textarea from "@/components/ui/Textarea";
 import Label from "@/components/ui/Label";
 import Button from "@/components/ui/Button";
 
+declare global {
+  interface Window {
+    dataLayer: Record<string, unknown>[];
+  }
+}
+
 const SERVICE_OPTIONS = [
   "Performance Marketing",
   "SEO & Content",
@@ -18,6 +24,7 @@ const SERVICE_OPTIONS = [
 
 export default function ContactForm() {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [messageError, setMessageError] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -26,16 +33,26 @@ export default function ContactForm() {
     const form = e.currentTarget;
     const fd = new FormData(form);
     const payload = {
-      name:       String(fd.get("name") ?? ""),
-      company:    String(fd.get("company") ?? "") || undefined,
-      email:      String(fd.get("email") ?? ""),
-      phone:      String(fd.get("phone") ?? "") || undefined,
-      industry:   String(fd.get("industry") ?? "") || undefined,
-      service:    String(fd.get("service") ?? "") || undefined,
-      budget:     String(fd.get("budget") ?? "") || undefined,
-      message:    String(fd.get("message") ?? ""),
+      name: String(fd.get("name") ?? ""),
+      company: String(fd.get("company") ?? "") || undefined,
+      email: String(fd.get("email") ?? ""),
+      phone: String(fd.get("phone") ?? "") || undefined,
+      industry: String(fd.get("industry") ?? "") || undefined,
+      service: String(fd.get("service") ?? "") || undefined,
+      budget: String(fd.get("budget") ?? "") || undefined,
+      message: String(fd.get("message") ?? ""),
       sourcePage: typeof window !== "undefined" ? window.location.pathname : undefined,
     };
+
+    if (payload.message.trim().length < 20) {
+      setMessageError(
+        "Please enter at least 20 characters so we can better understand your project requirements."
+      );
+      setStatus("idle");
+      return;
+    }
+
+    setMessageError("");
 
     try {
       const res = await fetch("/api/contact", {
@@ -43,7 +60,19 @@ export default function ContactForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       if (!res.ok) throw new Error("Request failed");
+
+      // Google Tag Manager Event
+      if (typeof window !== "undefined") {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: "generate_lead",
+          form_name: "contact_form",
+          form_location: "contact_page",
+        });
+      }
+
       form.reset();
       setStatus("sent");
     } catch {
@@ -126,7 +155,15 @@ export default function ContactForm() {
           rows={5}
           placeholder="Tell us a bit about your business and what you're looking to achieve."
           required
+          onChange={() => {
+            if (messageError) setMessageError("");
+          }}
         />
+        {messageError && (
+          <p className="mt-2 text-sm text-red-500" role="alert">
+            {messageError}
+          </p>
+        )}
       </div>
 
       {status === "error" && (
