@@ -1,7 +1,10 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Container from "@/components/ui/Container";
+import { trackStrategyCallClick, trackEvent } from "@/lib/tracking";
+import MagneticCTA from "@/components/ui/MagneticCTA";
 
 /* ── scroll-reveal hook ── */
 function useReveal() {
@@ -9,100 +12,27 @@ function useReveal() {
     const els = document.querySelectorAll<HTMLElement>(".reveal");
     const io = new IntersectionObserver(
       (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add("revealed")),
-      { threshold: 0.15 }
+      { threshold: 0.12 }
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
 }
 
-/* ── tiny inline SVG dashboard illustration ── */
-function DashboardIllustration({ style }: { style?: React.CSSProperties }) {
-  return (
-    <svg
-      viewBox="0 0 480 320"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      style={style}
-      aria-hidden="true"
-      className="w-full h-full"
-    >
-      {/* card bg */}
-      <rect width="480" height="320" rx="16" fill="#0a1e6e" fillOpacity=".85" />
-
-      {/* top bar */}
-      <rect x="16" y="16" width="448" height="36" rx="8" fill="#1a2f8a" />
-      <circle cx="36" cy="34" r="8" fill="#0035ca" />
-      <rect x="52" y="28" width="80" height="12" rx="4" fill="#c9d4ff" fillOpacity=".4" />
-      <rect x="360" y="26" width="88" height="16" rx="6" fill="#0035ca" />
-
-      {/* ROAS card */}
-      <rect x="16" y="64" width="136" height="80" rx="10" fill="#1a2f8a" />
-      <rect x="28" y="76" width="48" height="8" rx="3" fill="#c9d4ff" fillOpacity=".5" />
-      <text x="28" y="118" fontFamily="sans-serif" fontSize="26" fontWeight="800" fill="white">3.8x</text>
-      <rect x="28" y="128" width="60" height="6" rx="3" fill="#0035ca" fillOpacity=".7" />
-
-      {/* Revenue card */}
-      <rect x="164" y="64" width="136" height="80" rx="10" fill="#1a2f8a" />
-      <rect x="176" y="76" width="56" height="8" rx="3" fill="#c9d4ff" fillOpacity=".5" />
-      <text x="176" y="118" fontFamily="sans-serif" fontSize="22" fontWeight="800" fill="white">$48K</text>
-      <rect x="176" y="128" width="72" height="6" rx="3" fill="#0035ca" fillOpacity=".7" />
-
-      {/* CTR card */}
-      <rect x="312" y="64" width="152" height="80" rx="10" fill="#0035ca" />
-      <rect x="324" y="76" width="44" height="8" rx="3" fill="white" fillOpacity=".4" />
-      <text x="324" y="118" fontFamily="sans-serif" fontSize="26" fontWeight="800" fill="white">+64%</text>
-      <rect x="324" y="128" width="80" height="6" rx="3" fill="white" fillOpacity=".3" />
-
-      {/* chart area */}
-      <rect x="16" y="156" width="296" height="148" rx="10" fill="#1a2f8a" />
-      <rect x="28" y="168" width="80" height="8" rx="3" fill="#c9d4ff" fillOpacity=".5" />
-      {/* bar chart */}
-      {[
-        [28, 40], [56, 70], [84, 55], [112, 85], [140, 65],
-        [168, 90], [196, 75], [224, 95], [252, 80],
-      ].map(([x, h], i) => (
-        <rect
-          key={i}
-          x={x + 16}
-          y={284 - h}
-          width="18"
-          height={h}
-          rx="4"
-          fill={i === 7 ? "#0035ca" : "#c9d4ff"}
-          fillOpacity={i === 7 ? "1" : "0.35"}
-        />
-      ))}
-
-      {/* meta / google panels */}
-      <rect x="324" y="156" width="140" height="68" rx="10" fill="#1a2f8a" />
-      <rect x="336" y="168" width="36" height="8" rx="3" fill="#c9d4ff" fillOpacity=".5" />
-      <rect x="336" y="182" width="100" height="6" rx="3" fill="#0035ca" fillOpacity=".6" />
-      <rect x="336" y="194" width="80" height="6" rx="3" fill="#c9d4ff" fillOpacity=".2" />
-      <rect x="336" y="206" width="60" height="6" rx="3" fill="#c9d4ff" fillOpacity=".2" />
-
-      <rect x="324" y="236" width="140" height="68" rx="10" fill="#1a2f8a" />
-      <rect x="336" y="248" width="44" height="8" rx="3" fill="#c9d4ff" fillOpacity=".5" />
-      <rect x="336" y="262" width="100" height="6" rx="3" fill="#0035ca" fillOpacity=".6" />
-      <rect x="336" y="274" width="80" height="6" rx="3" fill="#c9d4ff" fillOpacity=".2" />
-      <rect x="336" y="286" width="60" height="6" rx="3" fill="#c9d4ff" fillOpacity=".2" />
-    </svg>
-  );
-}
-
 const MARQUEE = [
   "Performance Marketing", "SEO & Content", "Meta Ads", "Google Ads",
-  "Branding", "Web Development", "Analytics", "Automation", "Social Media",
+  "Lead Generation", "Web Development", "Analytics", "Brand Strategy", "Social Media",
 ];
 
 const DEFAULT_STATS = [
-  { v: "100+", l: "Clients" },
+  { v: "100+", l: "Clients Served" },
   { v: "15+", l: "Countries" },
-  { v: "3.8x", l: "Avg ROAS" },
-  { v: "98%", l: "Satisfaction" },
+  { v: "3.8x", l: "Average ROAS" },
+  { v: "98%", l: "Client Satisfaction" },
 ];
 
-export interface HeroData {
+export interface HeroSlideData {
+  id?: string;
   badge?: string | null;
   headline?: string | null;
   subline?: string | null;
@@ -110,154 +40,223 @@ export interface HeroData {
   ctaPrimaryHref?: string | null;
   ctaSecondary?: string | null;
   ctaSecondaryHref?: string | null;
+  backgroundImage?: string | null;
   stats?: { v: string; l: string }[] | null;
+  slideDuration?: number;
 }
 
-export default function Hero({ data }: { data?: HeroData | null }) {
-  const badge = data?.badge || "Digital Growth Agency · Pakistan";
-  const subline = data?.subline || "Siachen Mark builds brands, drives qualified traffic, and turns clicks into customers — with full-funnel tracking from day one.";
-  const ctaPrimary = data?.ctaPrimary || "Start Your Growth";
-  const ctaPrimaryHref = data?.ctaPrimaryHref || "/contact";
-  const ctaSecondary = data?.ctaSecondary || "See Our Work";
-  const ctaSecondaryHref = data?.ctaSecondaryHref || "/portfolio";
-  const stats = data?.stats && data.stats.length ? data.stats : DEFAULT_STATS;
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const ref = useRef<HTMLDivElement>(null);
+export default function Hero({ slides }: { slides?: HeroSlideData[] | HeroSlideData | null }) {
+  const slideList: HeroSlideData[] = Array.isArray(slides)
+    ? slides
+    : slides
+    ? [slides]
+    : [
+        {
+          badge: "Performance Marketing & Digital Growth Agency",
+          headline: null,
+          subline:
+            "We help ambitious businesses acquire customers, grow revenue, and build brands they are proud of — through structured strategy, paid media, and creative execution.",
+          ctaPrimary: "Book a Strategy Call",
+          ctaPrimaryHref: "/contact",
+          ctaSecondary: "Explore Our Services",
+          ctaSecondaryHref: "/services",
+          backgroundImage: null,
+          stats: DEFAULT_STATS,
+          slideDuration: 6,
+        },
+      ];
+
+  const [activeIndex, setActiveIndex] = useState(0);
   useReveal();
 
-  function handleMouse(e: React.MouseEvent) {
-    const rect = ref.current?.getBoundingClientRect();
-    if (!rect) return;
-    const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
-    const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
-    setOffset({ x, y });
-  }
+  useEffect(() => {
+    if (slideList.length <= 1) return;
+    const currentDuration = (slideList[activeIndex]?.slideDuration || 6) * 1000;
+    const timer = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % slideList.length);
+    }, currentDuration);
+    return () => clearInterval(timer);
+  }, [activeIndex, slideList]);
+
+  const currentSlide = slideList[activeIndex] || slideList[0];
+
+  const badge = currentSlide.badge || "Performance Marketing & Digital Growth Agency";
+  const subline =
+    currentSlide.subline ||
+    "We help ambitious businesses acquire customers, grow revenue, and build brands they are proud of — through structured strategy, paid media, and creative execution.";
+  const ctaPrimary = currentSlide.ctaPrimary || "Book a Strategy Call";
+  const ctaPrimaryHref = currentSlide.ctaPrimaryHref || "/contact";
+  const ctaSecondary = currentSlide.ctaSecondary || "Explore Our Services";
+  const ctaSecondaryHref = currentSlide.ctaSecondaryHref || "/services";
+  const stats = currentSlide.stats && currentSlide.stats.length ? currentSlide.stats : DEFAULT_STATS;
+  const bgImage = currentSlide.backgroundImage;
 
   return (
-    <section
-      ref={ref}
-      onMouseMove={handleMouse}
-      className="relative overflow-hidden bg-[var(--color-navy)] px-6 pt-24 pb-28"
-    >
-      {/* Animated blobs */}
-      <div className="pointer-events-none absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-[var(--color-navy-bright)] opacity-20 blur-3xl animate-blob" />
-      <div className="pointer-events-none absolute -bottom-24 -right-24 w-[400px] h-[400px] rounded-full bg-[var(--color-navy-dim)] opacity-30 blur-3xl animate-blob" style={{ animationDelay: "3s" }} />
-
-      {/* Spinning ring */}
-      <div
-        className="pointer-events-none absolute top-16 right-[10%] w-64 h-64 rounded-full border border-[var(--color-on-navy)] opacity-10 animate-spin-slow"
-        aria-hidden="true"
-      />
-
-      <Container className="relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left — copy */}
-          <div>
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-[var(--radius-full)] border border-white/20 bg-white/10 backdrop-blur-md text-[var(--color-on-navy)] text-xs font-semibold uppercase tracking-widest mb-6 shadow-[0_2px_16px_rgba(0,53,202,0.25)] animate-fade-in">
-              <span className="relative flex h-2 w-2" aria-hidden="true">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" style={{ animation: "pulse-ring 2s ease-out infinite" }} />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              {badge}
-            </span>
-            <h1
-              className="text-4xl sm:text-5xl xl:text-6xl font-extrabold text-white leading-[1.1] tracking-tight animate-fade-up"
-              style={{ animationDelay: "0.1s" }}
-            >
-              {data?.headline ? (
-                data.headline
-              ) : (
-                <>
-                  Performance.<br />
-                  <span
-                    className="text-transparent bg-clip-text"
-                    style={{
-                      backgroundImage: "linear-gradient(90deg,#c9d4ff,#0035ca)",
-                      backgroundSize: "200% 200%",
-                      animation: "gradient-shift 4s ease infinite",
-                    }}
-                  >
-                    Growth.
-                  </span>{" "}
-                  Impact.
-                </>
-              )}
-            </h1>
-            <p
-              className="mt-6 text-lg text-[var(--color-on-navy)] max-w-lg leading-relaxed animate-fade-up"
-              style={{ animationDelay: "0.2s" }}
-            >
-              {subline}
-            </p>
-            <div
-              className="mt-10 flex flex-col sm:flex-row gap-4 animate-fade-up"
-              style={{ animationDelay: "0.3s" }}
-            >
-              <a
-                href={ctaPrimaryHref}
-                className="group relative inline-flex items-center justify-center px-8 py-3.5 rounded-[var(--radius-full)] bg-white text-[var(--color-navy)] font-semibold text-sm overflow-hidden transition-all hover:shadow-[0_0_32px_rgba(0,53,202,0.5)]"
-              >
-                <span className="relative z-10">{ctaPrimary}</span>
-              </a>
-              <a
-                href={ctaSecondaryHref}
-                className="inline-flex items-center justify-center px-8 py-3.5 rounded-[var(--radius-full)] border border-[var(--color-on-navy)] text-[var(--color-on-navy)] font-semibold text-sm hover:bg-white/10 transition-colors"
-              >
-                {ctaSecondary}
-              </a>
-            </div>
-
-            {/* Stat pills */}
-            <div
-              className="mt-12 flex flex-wrap gap-4 animate-fade-up"
-              style={{ animationDelay: "0.4s" }}
-            >
-              {stats.map((s) => (
-                <div
-                  key={s.l}
-                  className="flex flex-col items-center px-5 py-3 rounded-[var(--radius-lg)] border border-[var(--color-navy-dim)] bg-white/5 backdrop-blur-sm"
-                >
-                  <span className="text-xl font-extrabold text-white">{s.v}</span>
-                  <span className="text-xs text-[var(--color-on-navy)]">{s.l}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right — dashboard illustration */}
-          <div
-            className="relative hidden lg:block animate-fade-in"
-            style={{
-              animationDelay: "0.5s",
-              transform: `perspective(900px) rotateY(${offset.x * -6}deg) rotateX(${offset.y * 4}deg)`,
-              transition: "transform 0.12s ease-out",
-            }}
-          >
-            {/* Glow */}
-            <div className="absolute inset-0 rounded-[var(--radius-xl)] bg-[var(--color-navy-bright)] opacity-20 blur-2xl scale-95" />
-            <div className="relative rounded-[var(--radius-xl)] overflow-hidden shadow-[var(--shadow-lg)] border border-[var(--color-navy-dim)] animate-float">
-              <DashboardIllustration />
-            </div>
-            {/* Floating ROAS badge */}
-            <div className="absolute -top-4 -right-4 bg-white rounded-[var(--radius-lg)] px-4 py-2 shadow-[var(--shadow-md)] animate-float-slow">
-              <p className="text-xs text-[var(--color-muted)]">ROAS</p>
-              <p className="text-lg font-extrabold text-[var(--color-navy)]">3.8×</p>
-            </div>
-            {/* Floating revenue badge */}
-            <div className="absolute -bottom-4 -left-4 bg-[var(--color-navy-bright)] rounded-[var(--radius-lg)] px-4 py-2 shadow-[var(--shadow-md)] animate-float" style={{ animationDelay: "1.5s" }}>
-              <p className="text-xs text-[var(--color-on-navy)]">Revenue</p>
-              <p className="text-lg font-extrabold text-white">+64%</p>
-            </div>
-          </div>
+    <section className="relative overflow-hidden bg-[var(--color-navy)] min-h-[70vh] sm:min-h-[80vh] lg:min-h-[90vh] flex flex-col justify-between text-white" aria-label="Hero">
+      {/* Background Image with Dark Navy Contrast Overlay */}
+      {bgImage && (
+        <div className="absolute inset-0 z-0">
+          <Image
+            src={bgImage}
+            alt="Hero Background"
+            fill
+            priority={activeIndex === 0}
+            className="object-cover transition-opacity duration-700"
+          />
+          {/* Intelligent Dark Gradient Overlay for Contrast */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-navy)] via-[var(--color-navy)]/90 to-[var(--color-navy)]/70" />
         </div>
-      </Container>
+      )}
 
-      {/* Scrolling marquee */}
-      <div className="relative mt-20 overflow-hidden border-t border-[var(--color-navy-dim)] pt-6">
-        <div className="flex w-max animate-marquee gap-12 whitespace-nowrap">
-          {[...MARQUEE, ...MARQUEE].map((item, i) => (
-            <span key={i} className="text-sm font-medium text-[var(--color-on-navy)] opacity-60 uppercase tracking-widest">
-              {item}
+      {/* Grid Pattern overlay when no bg image */}
+      {!bgImage && (
+        <div
+          className="pointer-events-none absolute inset-0 z-0"
+          aria-hidden="true"
+          style={{
+            backgroundImage:
+              "radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+      )}
+
+      {/* Ambient floating glow elements for visual depth */}
+      <div className="pointer-events-none absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[var(--color-navy-bright)] opacity-25 blur-3xl animate-float-slow" aria-hidden="true" />
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-blue-600 opacity-20 blur-3xl animate-float-reverse" aria-hidden="true" />
+
+      {/* Main hero content */}
+      <div className="relative z-10 pt-16 sm:pt-24 lg:pt-32 pb-12 sm:pb-16 flex-1 flex items-center">
+        <Container>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            {/* Text content column */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Badge */}
+              <div className="reveal">
+                <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-[var(--radius-full)] border border-white/20 bg-white/10 text-[var(--color-on-navy)] text-xs font-semibold uppercase tracking-widest backdrop-blur-md">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
+                  {badge}
+                </span>
+              </div>
+
+              {/* Headline */}
+              <div className="reveal">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.08] font-display">
+                  {currentSlide.headline ? (
+                    currentSlide.headline
+                  ) : (
+                    <>
+                      We Build Growth Systems That{" "}
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-sky-200 to-white">
+                        Scale Revenue.
+                      </span>
+                    </>
+                  )}
+                </h1>
+              </div>
+
+              {/* Subline */}
+              <div className="reveal">
+                <p className="text-base sm:text-lg text-[var(--color-on-navy)] opacity-90 max-w-xl leading-relaxed font-normal">
+                  {subline}
+                </p>
+              </div>
+
+              {/* CTAs */}
+              <div className="reveal flex flex-wrap gap-4 pt-2 items-center">
+                <MagneticCTA>
+                  <Link
+                    href={ctaPrimaryHref}
+                    onClick={() => trackStrategyCallClick("hero_primary")}
+                    className="px-7 py-3.5 rounded-[var(--radius-full)] bg-white text-[var(--color-navy)] font-bold text-sm hover:bg-[var(--color-off-white)] transition-all duration-200 shadow-lg inline-flex items-center gap-2"
+                  >
+                    {ctaPrimary}
+                    <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M3 8h10M9 4l4 4-4 4" />
+                    </svg>
+                  </Link>
+                </MagneticCTA>
+
+                <Link
+                  href={ctaSecondaryHref}
+                  onClick={() => trackEvent("cta_click", { location: "hero_secondary", label: ctaSecondary || "Explore Services" })}
+                  className="px-7 py-3.5 rounded-[var(--radius-full)] border border-white/25 text-white font-semibold text-sm hover:bg-white/10 hover:border-white/40 transition-all duration-200"
+                >
+                  {ctaSecondary}
+                </Link>
+              </div>
+
+              {/* Stat Pills */}
+              <div className="reveal pt-6 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {stats.map((s) => (
+                  <div key={s.l}>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight font-display">{s.v}</p>
+                    <p className="text-[11px] font-medium text-[var(--color-on-navy)] opacity-70 uppercase tracking-wider mt-0.5">{s.l}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Visual/Image Card Column — desktop only */}
+            <div className="hidden lg:block lg:col-span-5 reveal">
+              <div className="animate-float relative rounded-[var(--radius-xl)] border border-white/15 bg-white/5 backdrop-blur-md p-6 shadow-2xl space-y-4">
+                <div className="relative h-64 sm:h-72 rounded-[var(--radius-lg)] overflow-hidden border border-white/10">
+                  <Image
+                    src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=1200&auto=format&fit=crop"
+                    alt="Digital Performance Marketing Team at Work"
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 40vw"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-navy)] via-transparent to-transparent opacity-80" />
+                  <div className="absolute bottom-4 left-4 right-4 text-white">
+                    <p className="text-xs font-semibold text-sky-300 uppercase tracking-widest">Full-Funnel Growth</p>
+                    <p className="text-base font-extrabold mt-0.5">Strategy + Paid Media + Conversions</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="bg-white/8 rounded-lg p-3 border border-white/10">
+                    <p className="font-bold text-white">Meta & Google Ads</p>
+                    <p className="text-[10px] text-[var(--color-on-navy)] opacity-70 mt-0.5">Targeted acquisition</p>
+                  </div>
+                  <div className="bg-white/8 rounded-lg p-3 border border-white/10">
+                    <p className="font-bold text-white">CAPI & GA4 Tracking</p>
+                    <p className="text-[10px] text-[var(--color-on-navy)] opacity-70 mt-0.5">Full attribution</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </Container>
+      </div>
+
+      {/* Multi-slide indicators */}
+      {slideList.length > 1 && (
+        <div className="relative z-10 pb-6 flex justify-center items-center gap-2">
+          {slideList.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setActiveIndex(idx)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                activeIndex === idx ? "w-8 bg-white" : "w-2 bg-white/30 hover:bg-white/60"
+              }`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Bottom Marquee */}
+      <div className="relative z-10 py-3 bg-black/25 border-t border-white/10 overflow-hidden">
+        <div className="flex w-max animate-marquee gap-8 text-xs font-semibold tracking-wider text-[var(--color-on-navy)] uppercase opacity-80" aria-hidden="true">
+          {[...MARQUEE, ...MARQUEE].map((m, i) => (
+            <span key={i} className="flex items-center gap-3">
+              <span>{m}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
             </span>
           ))}
         </div>

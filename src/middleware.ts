@@ -1,33 +1,49 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Session cookie check (NextAuth default cookies)
   const sessionToken =
     request.cookies.get("next-auth.session-token")?.value ||
     request.cookies.get("__Secure-next-auth.session-token")?.value;
 
-  const isAdminRoute = pathname.startsWith("/dashboard");
+  // Support /admin alias routes
+  if (pathname.startsWith("/admin") && !pathname.startsWith("/api/admin")) {
+    const targetPath = pathname.replace(/^\/admin/, "/dashboard") || "/dashboard";
+    return NextResponse.redirect(new URL(targetPath, request.url));
+  }
+
+  const isProtectedRoute =
+    pathname.startsWith("/dashboard") || pathname.startsWith("/user");
+
   const isAuthRoute =
     pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
     pathname.startsWith("/forgot-password") ||
     pathname.startsWith("/reset-password");
 
-  // Agar user dashboard par bina login ke jaye -> redirect to /login
-  if (isAdminRoute && !sessionToken) {
+  // Redirect unauthenticated users to login
+  if (isProtectedRoute && !sessionToken) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Agar user already logged in ho aur login page par jaye -> redirect to /dashboard
+  // Redirect already-logged-in users away from auth pages
   if (isAuthRoute && sessionToken) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/auth/redirect", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/forgot-password", "/reset-password"],
+  matcher: [
+    "/admin/:path*",
+    "/dashboard/:path*",
+    "/user/:path*",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+  ],
 };

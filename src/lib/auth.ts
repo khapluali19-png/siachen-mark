@@ -9,6 +9,7 @@ declare module "next-auth" {
     user: {
       id: string;
       role?: string;
+      plan?: string;
     } & DefaultSession["user"];
   }
 }
@@ -17,6 +18,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     role?: string;
+    plan?: string;
   }
 }
 
@@ -45,7 +47,12 @@ export const authOptions: NextAuthOptions = {
           user.password
         );
         if (!valid) return null;
-        return { id: user.id, email: user.email, name: user.name, role: user.role };
+        // Update lastLoginAt
+        await db.user.update({
+          where: { id: user.id },
+          data: { lastLoginAt: new Date() },
+        });
+        return { id: user.id, email: user.email, name: user.name, role: user.role, plan: user.plan };
       },
     }),
   ],
@@ -53,21 +60,22 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as { role?: string }).role;
+        token.role = (user as any).role;
+        token.plan = (user as any).plan;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
-        (session.user as { role?: string }).role = token.role as string;
+        (session.user as any).role = token.role;
+        (session.user as any).plan = token.plan;
       }
       return session;
     },
   },
 };
 
-// Yahan 'auth' ko proper async function export kiya gaya hai taake koi type error na aaye
 export async function auth() {
   return await getServerSession(authOptions);
 }

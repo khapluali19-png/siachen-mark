@@ -1,73 +1,98 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Montserrat } from "next/font/google";
-import Script from "next/script";
+import { Montserrat, Inter } from "next/font/google";
 
 import "./globals.css";
 import ScrollReveal from "@/components/layout/ScrollReveal";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/JsonLd";
 import Analytics from "@/components/analytics/Analytics";
 import AdminProviders from "@/components/admin/AdminProviders";
+import { getSiteSettings } from "@/lib/settings";
+import StickyMobileCTA from "@/components/layout/StickyMobileCTA";
+import MouseSpotlight from "@/components/ui/MouseSpotlight";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
   variable: "--font-montserrat",
+  display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://siachenmark.com"
-  ),
-  title: {
-    default: "Siachen Mark — Performance. Growth. Impact.",
-    template: "%s — Siachen Mark",
-  },
-  description:
-    "Digital marketing and design agency. We build brands, drive traffic, and turn clicks into customers.",
-  openGraph: {
-    type: "website",
-    siteName: "Siachen Mark",
-    title: "Siachen Mark — Performance. Growth. Impact.",
-    description:
-      "Digital marketing and design agency. We build brands, drive traffic, and turn clicks into customers.",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Siachen Mark — Performance. Growth. Impact.",
-    description:
-      "Digital marketing and design agency. We build brands, drive traffic, and turn clicks into customers.",
-  },
-};
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
-export default function RootLayout({
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  const siteUrl = settings.productionUrl || "https://siachenmark.com";
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: {
+      default: settings.defaultSeoTitle,
+      template: `%s | ${settings.siteName}`,
+    },
+    description: settings.defaultMetaDescription,
+    keywords: [
+      "performance marketing agency Pakistan",
+      "digital marketing Islamabad",
+      "Meta Ads agency",
+      "Google Ads management",
+      "SEO agency Pakistan",
+      "web design agency Islamabad",
+      "social media marketing",
+      "Siachen Mark",
+    ],
+    robots: {
+      index: settings.robotsIndex,
+      follow: settings.robotsFollow,
+      googleBot: {
+        index: settings.robotsIndex,
+        follow: settings.robotsFollow,
+      },
+    },
+    verification: settings.googleSearchConsoleCode
+      ? {
+          google: settings.googleSearchConsoleCode,
+        }
+      : undefined,
+    openGraph: {
+      type: "website",
+      siteName: settings.siteName,
+      title: settings.defaultOgTitle || settings.defaultSeoTitle,
+      description: settings.defaultOgDescription || settings.defaultMetaDescription,
+      url: siteUrl,
+      locale: "en_US",
+      images: [
+        {
+          url: settings.defaultOgImage || "/og-image.jpg",
+          width: 1200,
+          height: 630,
+          alt: settings.siteName,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: settings.defaultOgTitle || settings.defaultSeoTitle,
+      description: settings.defaultOgDescription || settings.defaultMetaDescription,
+      images: [settings.defaultOgImage || "/og-image.jpg"],
+    },
+    alternates: {
+      canonical: settings.canonicalBaseUrl || siteUrl,
+    },
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const settings = await getSiteSettings();
+
   return (
-    <html lang="en" className={`${montserrat.variable} h-full antialiased`}>
-      <head>
-        <Script id="google-tag-manager" strategy="afterInteractive">
-          {`
-            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-            'https://www.googletagmanager.com/gtm.js?id='+i+dl;
-            f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','GTM-N79GXB3L');
-          `}
-        </Script>
-      </head>
-
+    <html lang="en" className={`${montserrat.variable} ${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        {/* Google Tag Manager (noscript) */}
-        <noscript>
-          <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-N79GXB3L"
-            height="0"
-            width="0"
-            style={{ display: "none", visibility: "hidden" }}
-          />
-        </noscript>
-
         <AdminProviders>
           <OrganizationJsonLd />
           <WebSiteJsonLd />
@@ -75,9 +100,12 @@ export default function RootLayout({
             <Analytics />
           </Suspense>
           <ScrollReveal />
+          <MouseSpotlight />
           {children}
+          <StickyMobileCTA whatsappNumber={settings.whatsappNumber || settings.whatsapp} />
         </AdminProviders>
       </body>
     </html>
   );
 }
+

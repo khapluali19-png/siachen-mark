@@ -1,27 +1,34 @@
+import { db } from "@/lib/db";
 import Container from "@/components/ui/Container";
 import SectionHeading from "@/components/ui/SectionHeading";
+import Image from "next/image";
+import TrackedLink from "@/components/ui/TrackedLink";
 
 type MockupKey = "clinic" | "freight" | "ecommerce" | "restaurant" | "realestate" | "saas";
 
-const projects: {
+interface DefaultProject {
+  id?: string;
   name: string;
   category: string;
   services: string[];
-  metrics: { v: string; l: string }[];
+  focus: { label: string; detail: string }[];
   desc: string;
   accent: string;
   mockup: MockupKey;
-}[] = [
+  coverImage?: string | null;
+}
+
+const DEFAULT_PROJECTS: DefaultProject[] = [
   {
     name: "Aesthetic Wellness Clinic",
     category: "Healthcare",
     services: ["Performance Marketing", "Meta Ads", "Conversion Tracking"],
-    metrics: [
-      { v: "+64%", l: "Inquiries" },
-      { v: "3.2x", l: "ROAS" },
-      { v: "-41%", l: "Cost / Lead" },
+    focus: [
+      { label: "Targeting", detail: "Local High-Intent" },
+      { label: "Funnel", detail: "CAPI + Booking" },
+      { label: "Focus", detail: "Lead Quality" },
     ],
-    desc: "Full-funnel growth setup for an aesthetic clinic — from Meta campaigns to end-to-end conversion tracking.",
+    desc: "Full-funnel growth setup for an aesthetic clinic — from Meta campaigns to end-to-end conversion tracking and patient inquiry management.",
     accent: "#0035ca",
     mockup: "clinic",
   },
@@ -29,12 +36,12 @@ const projects: {
     name: "B2B Freight & Logistics",
     category: "Logistics",
     services: ["SEO", "Web Design", "LinkedIn Content"],
-    metrics: [
-      { v: "2.8x", l: "Organic Traffic" },
-      { v: "6", l: "Page-1 Keywords" },
-      { v: "22", l: "Qualified Leads" },
+    focus: [
+      { label: "SEO", detail: "Technical Audit" },
+      { label: "UX", detail: "Corporate Profile" },
+      { label: "Reach", detail: "B2B Decision Makers" },
     ],
-    desc: "Website redesign, technical SEO, and founder-led LinkedIn content strategy for a freight operator.",
+    desc: "Website redesign, technical SEO, and founder-led LinkedIn content strategy for a commercial freight operator.",
     accent: "#0a1e6e",
     mockup: "freight",
   },
@@ -42,12 +49,12 @@ const projects: {
     name: "Artisan E-commerce Brand",
     category: "E-commerce",
     services: ["Branding", "Social Media", "Short-form Video"],
-    metrics: [
-      { v: "+180%", l: "Engagement" },
-      { v: "3", l: "Sell-out Drops" },
-      { v: "+92%", l: "Repeat Buyers" },
+    focus: [
+      { label: "Visuals", detail: "Product Catalog" },
+      { label: "Content", detail: "Reels & Shorts" },
+      { label: "Branding", detail: "Identity System" },
     ],
-    desc: "Brand identity, product catalog design, and short-form video for Instagram and TikTok.",
+    desc: "Brand identity, product catalog design, and short-form video creative built to build trust and highlight craftsmanship.",
     accent: "#1a2f8a",
     mockup: "ecommerce",
   },
@@ -55,12 +62,12 @@ const projects: {
     name: "Fine-Dining Restaurant",
     category: "Hospitality",
     services: ["Local SEO", "Google Business", "Social Media"],
-    metrics: [
-      { v: "+3.4k", l: "Map Views / mo" },
-      { v: "+58%", l: "Reservations" },
-      { v: "4.9★", l: "Avg Rating" },
+    focus: [
+      { label: "Maps", detail: "Profile Optimization" },
+      { label: "Media", detail: "Visual Menus" },
+      { label: "Local", detail: "Geo-Targeting" },
     ],
-    desc: "Local search dominance and a consistent content system that keeps tables booked through the week.",
+    desc: "Local search dominance and a consistent content system that keeps tables booked through peak dining hours.",
     accent: "#0035ca",
     mockup: "restaurant",
   },
@@ -68,12 +75,12 @@ const projects: {
     name: "Real-Estate Developer",
     category: "Real Estate",
     services: ["Lead Gen", "Landing Pages", "GA4 Tracking"],
-    metrics: [
-      { v: "312", l: "Leads / Launch" },
-      { v: "-37%", l: "Cost / Lead" },
-      { v: "5.1x", l: "ROAS" },
+    focus: [
+      { label: "Landing", detail: "High-Converting Page" },
+      { label: "Ads", detail: "Meta & Google" },
+      { label: "Analytics", detail: "GA4 Funnel" },
     ],
-    desc: "High-intent lead generation with dedicated landing pages and full GA4 measurement for a property launch.",
+    desc: "High-intent lead generation with dedicated landing pages and full GA4 measurement for a property development launch.",
     accent: "#0a1e6e",
     mockup: "realestate",
   },
@@ -81,12 +88,12 @@ const projects: {
     name: "B2B SaaS Platform",
     category: "Technology",
     services: ["Google Ads", "SEO", "Analytics"],
-    metrics: [
-      { v: "+140%", l: "Free Trials" },
-      { v: "-29%", l: "CAC" },
-      { v: "2.3x", l: "MQL Volume" },
+    focus: [
+      { label: "PPC", detail: "Search Intent Ads" },
+      { label: "Content", detail: "SEO Hub" },
+      { label: "Tracking", detail: "Signup Funnel" },
     ],
-    desc: "Search and content strategy that turned a quiet product page into a predictable trial-signup engine.",
+    desc: "Search and content strategy that turned a quiet product page into a predictable trial-signup acquisition engine.",
     accent: "#1a2f8a",
     mockup: "saas",
   },
@@ -134,7 +141,7 @@ function Mockup({ variant, accent }: { variant: MockupKey; accent: string }) {
             <circle cx="160" cy="90" r="52" fill="white" />
             <circle cx="160" cy="90" r="38" fill={accent} fillOpacity="0.12" />
             <circle cx="160" cy="90" r="20" fill={accent} fillOpacity="0.3" />
-            <path d="M118 60v40M114 60v18a4 4 0 0 0 8 0V60" stroke={accent} strokeWidth="4" strokeLinecap="round" />
+            <path d="M118 60v40M114 60v18a4 4 0 0 0 8 0V60" stroke={accent} strokeWidth="4" strokeLinecap="round" fill="none" />
             <path d="M206 60c-6 0-10 8-10 20s4 14 4 14v6" stroke={accent} strokeWidth="4" strokeLinecap="round" fill="none" />
           </g>
         )}
@@ -162,29 +169,65 @@ function Mockup({ variant, accent }: { variant: MockupKey; accent: string }) {
   );
 }
 
-export default function FeaturedProjects() {
+export default async function FeaturedProjects() {
+  const dbProjects = await db.portfolioProject.findMany({
+    where: { published: true },
+    orderBy: { order: "asc" },
+  }).catch(() => []);
+
+  const projectList = dbProjects.length > 0
+    ? dbProjects.map((p, idx) => ({
+        id: p.id,
+        name: p.title,
+        category: p.category,
+        services: p.services.length ? p.services : ["Performance Marketing", "Strategy"],
+        focus: [
+          { label: "Objective", detail: p.category },
+          { label: "Strategy", detail: p.result || "Full-Funnel Growth" },
+          { label: "Delivery", detail: "Verified System" },
+        ],
+        desc: p.description,
+        accent: idx % 2 === 0 ? "#0035ca" : "#0a1e6e",
+        mockup: (["clinic", "freight", "ecommerce", "restaurant", "realestate", "saas"][idx % 6]) as MockupKey,
+        coverImage: p.coverImage,
+      }))
+    : DEFAULT_PROJECTS;
+
   return (
-    <section className="bg-[var(--color-background)] py-24 px-6">
+    <section id="portfolio-projects" className="bg-[var(--color-background)] py-24 px-6">
       <Container>
         <SectionHeading
           label="Our Work"
-          title="Projects That Moved the Needle"
-          subtitle="A selection of client engagements across healthcare, logistics, hospitality, real estate, and technology."
+          title="Client Engagement Highlights"
+          subtitle="Projects across healthcare, logistics, hospitality, real estate, and technology — showing the approach, the work, and the objective."
           center
           className="mb-14"
         />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((p, i) => (
+          {projectList.map((p, i) => (
             <article
               key={p.name}
-              className="reveal group relative flex flex-col rounded-[var(--radius-xl)] border border-[var(--color-border)] overflow-hidden bg-[var(--color-background)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-1.5 transition-all duration-300"
-              style={{ transitionDelay: `${i * 70}ms` }}
+              className={`reveal reveal-delay-${(i % 3) + 1} premium-card group relative flex flex-col rounded-[var(--radius-xl)] border border-[var(--color-border)] overflow-hidden bg-white shadow-[var(--shadow-sm)]`}
             >
-              {/* Mockup + category badge */}
-              <div className="relative">
-                <Mockup variant={p.mockup} accent={p.accent} />
+              {/* Media / Mockup */}
+              <div className="relative overflow-hidden">
+                {p.coverImage ? (
+                  <div className="relative w-full h-44 overflow-hidden bg-gray-100">
+                    <Image
+                      src={p.coverImage}
+                      alt={p.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="image-hover-zoom object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="overflow-hidden">
+                    <Mockup variant={p.mockup} accent={p.accent} />
+                  </div>
+                )}
                 <span
-                  className="absolute top-3 left-3 px-3 py-1 rounded-[var(--radius-full)] text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-sm"
+                  className="absolute top-3 left-3 px-3 py-1 rounded-[var(--radius-full)] text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-sm shadow-sm"
                   style={{ background: `${p.accent}e6` }}
                 >
                   {p.category}
@@ -195,12 +238,12 @@ export default function FeaturedProjects() {
                 <h3 className="font-extrabold text-[var(--color-navy)] text-lg leading-tight">{p.name}</h3>
                 <p className="mt-2 text-sm text-[var(--color-muted)] leading-relaxed flex-1">{p.desc}</p>
 
-                {/* Metrics */}
+                {/* Qualitative Focus Areas */}
                 <div className="mt-5 grid grid-cols-3 gap-2 rounded-[var(--radius-lg)] bg-[var(--color-off-white)] border border-[var(--color-border)] p-3">
-                  {p.metrics.map((m) => (
-                    <div key={m.l} className="text-center">
-                      <p className="text-base font-extrabold" style={{ color: p.accent }}>{m.v}</p>
-                      <p className="text-[10px] text-[var(--color-muted)] uppercase tracking-wide leading-tight mt-0.5">{m.l}</p>
+                  {p.focus.map((f) => (
+                    <div key={f.label} className="text-center">
+                      <p className="text-[10px] text-[var(--color-muted)] uppercase tracking-wide">{f.label}</p>
+                      <p className="text-xs font-extrabold mt-0.5" style={{ color: p.accent }}>{f.detail}</p>
                     </div>
                   ))}
                 </div>
@@ -219,15 +262,17 @@ export default function FeaturedProjects() {
 
                 {/* Case study CTA */}
                 <div className="mt-5 pt-4 border-t border-[var(--color-border)]">
-                  <a
+                  <TrackedLink
                     href="/contact"
+                    trackingType="strategy_call"
+                    trackingLocation={`portfolio_card_${p.name.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`}
                     className="inline-flex items-center gap-2 text-sm font-bold text-[var(--color-navy)] group-hover:text-[var(--color-navy-bright)] transition-colors"
                   >
-                    View Case Study
+                    Discuss Similar Project
                     <svg viewBox="0 0 20 20" className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none">
                       <path d="M4 10h11M11 5l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                  </a>
+                  </TrackedLink>
                 </div>
               </div>
             </article>

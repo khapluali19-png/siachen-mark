@@ -8,20 +8,60 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(cuid())
-  name           String?
-  email          String          @unique
-  emailVerified  DateTime?
-  password       String?
-  role           Role            @default(EDITOR)
-  image          String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  accounts       Account[]
-  passwordResets PasswordReset[]
-  sessions       Session[]
+  id              String           @id @default(cuid())
+  name            String?
+  email           String           @unique
+  emailVerified   DateTime?
+  password        String?
+  role            Role             @default(EDITOR)
+  plan            Plan             @default(FREE)
+  scanCount       Int              @default(0)
+  lastLoginAt     DateTime?
+  image           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  accounts        Account[]
+  passwordResets  PasswordReset[]
+  sessions        Session[]
+  auditReports    AuditReport[]
+  extensionTokens ExtensionToken[]
 
   @@index([email])
+  @@index([plan])
+}
+
+model AuditReport {
+  id           String   @id @default(cuid())
+  userId       String
+  businessName String
+  query        String
+  address      String?
+  phone        String?
+  website      String?
+  rating       Float?
+  reviewCount  Int?
+  score        Int
+  grade        String
+  issuesCount  Int      @default(0)
+  data         Json
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ExtensionToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
 }
 
 model Account {
@@ -80,26 +120,46 @@ model HeroContent {
   subline          String
   ctaPrimary       String
   ctaSecondary     String
-  updatedAt        DateTime @updatedAt
   badge            String?
   ctaPrimaryHref   String?
   ctaSecondaryHref String?
+  backgroundImage  String?
+  overlayImage     String?
   stats            Json?
+  order            Int      @default(0)
+  isActive         Boolean  @default(true)
+  slideDuration    Int      @default(6)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([order])
+  @@index([isActive])
 }
 
 model Service {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  description String
-  icon        String?
-  order       Int      @default(0)
-  published   Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String   @id @default(cuid())
+  title            String
+  slug             String   @unique
+  shortDescription String?
+  description      String
+  icon             String?
+  image            String?
+  features         String[] @default([])
+  benefits         String[] @default([])
+  process          Json?
+  ctaText          String?  @default("Book a Strategy Call")
+  ctaHref          String?  @default("/contact")
+  seoTitle         String?
+  seoDescription   String?
+  order            Int      @default(0)
+  published        Boolean  @default(true)
+  featured         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@index([slug])
   @@index([order])
+  @@index([published])
 }
 
 model PortfolioProject {
@@ -107,11 +167,16 @@ model PortfolioProject {
   title       String
   slug        String   @unique
   category    String
-  services    String[]
+  clientName  String?
+  services    String[] @default([])
   description String
+  challenge   String?
+  solution    String?
   result      String?
   coverImage  String?
-  images      String[]
+  images      String[] @default([])
+  projectUrl  String?
+  featured    Boolean  @default(false)
   published   Boolean  @default(true)
   order       Int      @default(0)
   createdAt   DateTime @default(now())
@@ -119,6 +184,23 @@ model PortfolioProject {
 
   @@index([slug])
   @@index([category])
+  @@index([featured])
+  @@index([published])
+  @@index([order])
+}
+
+model NavigationItem {
+  id         String   @id @default(cuid())
+  label      String
+  href       String
+  order      Int      @default(0)
+  enabled    Boolean  @default(true)
+  isExternal Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([order])
+  @@index([enabled])
 }
 
 model Testimonial {
@@ -147,19 +229,27 @@ model FAQ {
 }
 
 model TeamMember {
-  id        String   @id @default(cuid())
-  name      String
-  role      String
-  bio       String?
-  image     String?
-  linkedin  String?
-  isFounder Boolean  @default(false)
-  order     Int      @default(0)
-  published Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  stats     Json?
-  title     String?
+  id          String   @id @default(cuid())
+  name        String
+  role        String
+  bio         String?
+  image       String?
+  linkedin    String?
+  email       String?
+  skills      String[] @default([])
+  location    String?  @default("Islamabad, Pakistan")
+  department  String?
+  isFounder   Boolean  @default(false)
+  isFeatured  Boolean  @default(false)
+  order       Int      @default(0)
+  published   Boolean  @default(true)
+  stats       Json?
+  title       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([order])
+  @@index([published])
 }
 
 model BlogPost {
@@ -284,6 +374,11 @@ model SiteSetting {
 enum Role {
   ADMIN
   EDITOR
+}
+
+enum Plan {
+  FREE
+  UNLIMITED
 }
 
 enum LeadStatus {

@@ -1,4 +1,6 @@
 import Container from "@/components/ui/Container";
+import { getSiteSettings } from "@/lib/settings";
+import TrackedLink from "@/components/ui/TrackedLink";
 
 /* 3D-ish vector map illustration (abstract, brand-colored) */
 function MapIllustration() {
@@ -22,7 +24,12 @@ function MapIllustration() {
   );
 }
 
-export default function LocationSection() {
+export default async function LocationSection() {
+  const settings = await getSiteSettings();
+  const waNumber = (settings.whatsappNumber || settings.whatsapp || "923488868517").replace(/[^0-9]/g, "");
+  const waHref = `https://wa.me/${waNumber}`;
+  const mapsHref = settings.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address || "Islamabad, Pakistan")}`;
+
   return (
     <section className="py-20 px-6">
       <Container>
@@ -53,18 +60,25 @@ export default function LocationSection() {
             <div className="relative p-8 sm:p-10 bg-[var(--color-off-white)]">
               <h2 className="text-2xl font-bold text-[var(--color-navy)]">Visit or Reach Out</h2>
               <p className="mt-2 text-sm text-[var(--color-muted)]">
-                Based in Islamabad, working with clients across Pakistan and beyond.
+                Based in {settings.address || "Islamabad, Pakistan"}, working with clients across Pakistan and beyond.
               </p>
 
               <dl className="mt-8 space-y-5">
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)]">Location</dt>
-                  <dd className="mt-1 text-[var(--color-navy)] font-medium">Islamabad, Pakistan</dd>
+                  <dd className="mt-1 text-[var(--color-navy)] font-medium">{settings.address || "Islamabad, Pakistan"}</dd>
                 </div>
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)]">Phone / WhatsApp</dt>
                   <dd className="mt-1">
-                    <a href="tel:+923488868517" className="text-[var(--color-navy)] font-medium hover:text-[var(--color-navy-bright)] transition-colors">+92 348 8868517</a>
+                    <TrackedLink
+                      href={`tel:${(settings.phone || "+92 348 8868517").replace(/[^0-9+]/g, "")}`}
+                      trackingType="phone"
+                      trackingLocation="location_section"
+                      className="text-[var(--color-navy)] font-medium hover:text-[var(--color-navy-bright)] transition-colors"
+                    >
+                      {settings.phoneDisplay || settings.phone || "+92 348 8868517"}
+                    </TrackedLink>
                   </dd>
                 </div>
                 <div>
@@ -75,21 +89,21 @@ export default function LocationSection() {
 
               <div className="mt-8 flex flex-col sm:flex-row gap-3">
                 <a
-                  href="https://www.google.com/maps/search/?api=1&query=Islamabad"
+                  href={mapsHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center px-6 py-3 rounded-[var(--radius-full)] bg-[var(--color-navy)] text-white font-semibold text-sm hover:bg-[var(--color-navy-bright)] transition-colors"
                 >
                   Get Directions
                 </a>
-                <a
-                  href="https://wa.me/923488868517"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <TrackedLink
+                  href={waHref}
+                  trackingType="whatsapp"
+                  trackingLocation="location_section"
                   className="inline-flex items-center justify-center px-6 py-3 rounded-[var(--radius-full)] border border-[var(--color-navy)] text-[var(--color-navy)] font-semibold text-sm hover:bg-[var(--color-background)] transition-colors"
                 >
                   Contact Us
-                </a>
+                </TrackedLink>
               </div>
             </div>
           </div>

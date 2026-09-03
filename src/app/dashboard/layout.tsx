@@ -6,6 +6,8 @@ import AdminProviders from "@/components/admin/AdminProviders";
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
+  // Only ADMIN users can access /dashboard (CMS)
+  if ((session.user as any).role !== "ADMIN") redirect("/user");
 
   return (
     <AdminProviders>

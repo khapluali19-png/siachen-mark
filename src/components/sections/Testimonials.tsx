@@ -40,7 +40,7 @@ const VerifiedBadge = () => (
 function TestimonialCard({ t }: { t: TCard }) {
   return (
     <figure
-      className="relative shrink-0 w-80 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-background)]/80 backdrop-blur-sm p-6 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-1 transition-all duration-300 mx-3"
+      className="premium-card relative shrink-0 w-80 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-background)]/80 backdrop-blur-sm p-6 shadow-[var(--shadow-sm)] mx-3"
     >
       {/* decorative quote */}
       <span className="absolute top-4 right-5 text-5xl font-serif leading-none text-[var(--color-navy)] opacity-[0.07] select-none" aria-hidden="true">&ldquo;</span>

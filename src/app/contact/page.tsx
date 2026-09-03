@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import PageHeader from "@/components/layout/PageHeader";
@@ -8,12 +8,15 @@ import ContactForm from "@/components/sections/contact/ContactForm";
 import ContactInfo from "@/components/sections/contact/ContactInfo";
 import ContactFAQ from "@/components/sections/contact/ContactFAQ";
 import LocationSection from "@/components/sections/contact/LocationSection";
+import { getPageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Contact Us — Siachen Mark",
-  description:
-    "Get in touch with Siachen Mark. Tell us about your business and what you need — we'll take it from there.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMetadata(
+    "contact",
+    "Contact Us — Book a Strategy Call",
+    "Get in touch with Siachen Mark. Tell us about your business goals and marketing challenges — we'll take it from there."
+  );
+}
 
 export default function ContactPage() {
   return (
@@ -24,21 +27,14 @@ export default function ContactPage() {
           title="Contact Us. We're Here to Help!"
           subtitle="No call centers, no bots. Tell us what you're working on and we'll get back to you directly."
         />
-
-        {/* Form + Info */}
-        <section className="py-20 px-6">
+        <section className="bg-[var(--color-background)] py-16 px-6">
           <Container>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-              <div className="lg:col-span-2">
-                <ContactForm />
-              </div>
-              <aside>
-                <ContactInfo />
-              </aside>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <ContactForm />
+              <ContactInfo />
             </div>
           </Container>
         </section>
-
         <LocationSection />
         <ContactFAQ />
         <CTA />

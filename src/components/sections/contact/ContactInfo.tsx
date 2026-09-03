@@ -1,31 +1,59 @@
-const channels = [
-  {
-    label: "WhatsApp",
-    value: "+92 348 8868517",
-    href: "https://wa.me/923488868517",
-    note: "Fastest way to reach us — usually a reply within hours.",
-  },
-  {
-    label: "Phone",
-    value: "+92 348 8868517",
-    href: "tel:+923488868517",
-    note: "Prefer to talk? Give us a call during business hours.",
-  },
-  {
-    label: "LinkedIn",
-    value: "linkedin.com/company/109209003",
-    href: "https://www.linkedin.com/company/109209003",
-    note: "Follow along and connect with the team.",
-  },
-];
+import { getSiteSettings } from "@/lib/settings";
+import TrackedLink from "@/components/ui/TrackedLink";
 
-export default function ContactInfo() {
+export default async function ContactInfo() {
+  const settings = await getSiteSettings();
+
+  const phone = settings.phone || "+92 348 8868517";
+  const rawPhone = phone.replace(/[^0-9+]/g, "");
+  const whatsapp = settings.whatsappNumber || phone;
+  const rawWhatsapp = whatsapp.replace(/[^0-9]/g, "");
+  const email = settings.contactEmail || "contact@siachenmark.com";
+  const linkedin = settings.linkedinUrl || "https://www.linkedin.com/company/109209003";
+
+  const channels: {
+    label: string;
+    value: string;
+    href: string;
+    note: string;
+    trackingType: "whatsapp" | "email" | "phone" | "custom";
+  }[] = [
+    {
+      label: "WhatsApp",
+      value: whatsapp,
+      href: `https://wa.me/${rawWhatsapp}`,
+      note: "Fastest way to reach our team — usually a reply within hours.",
+      trackingType: "whatsapp",
+    },
+    {
+      label: "Email",
+      value: email,
+      href: `mailto:${email}`,
+      note: "Send us project briefs, RFPs, or general inquiries.",
+      trackingType: "email",
+    },
+    {
+      label: "Phone",
+      value: phone,
+      href: `tel:${rawPhone}`,
+      note: "Prefer to talk directly? Give us a call during business hours.",
+      trackingType: "phone",
+    },
+    {
+      label: "LinkedIn",
+      value: "Siachen Mark LinkedIn",
+      href: linkedin,
+      note: "Follow our team updates and strategic insights.",
+      trackingType: "custom",
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-navy)]">Reach us directly</h2>
+        <h2 className="text-2xl font-bold text-[var(--color-navy)] font-display">Reach us directly</h2>
         <p className="mt-2 text-sm text-[var(--color-muted)]">
-          No call centers, no bots. You&rsquo;ll talk to the people who actually do the work.
+          No call centers, no automated bots. You&rsquo;ll talk directly to the performance strategists who manage your campaigns.
         </p>
       </div>
 
@@ -33,20 +61,20 @@ export default function ContactInfo() {
         {channels.map((c) => (
           <li
             key={c.label}
-            className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-background)] p-5"
+            className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-white p-5 shadow-sm hover:border-[var(--color-navy)] transition-colors"
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-navy-bright)]">
               {c.label}
             </p>
-            <a
+            <TrackedLink
               href={c.href}
-              target={c.href.startsWith("http") ? "_blank" : undefined}
-              rel={c.href.startsWith("http") ? "noopener noreferrer" : undefined}
-              className="mt-1 block text-base font-semibold text-[var(--color-navy)] hover:text-[var(--color-navy-bright)] transition-colors"
+              trackingType={c.trackingType}
+              trackingLocation="contact_info_card"
+              className="mt-1 block text-base font-extrabold text-[var(--color-navy)] hover:text-[var(--color-navy-bright)] transition-colors"
             >
               {c.value}
-            </a>
-            <p className="mt-1 text-sm text-[var(--color-muted)]">{c.note}</p>
+            </TrackedLink>
+            <p className="mt-1 text-xs text-[var(--color-muted)]">{c.note}</p>
           </li>
         ))}
       </ul>

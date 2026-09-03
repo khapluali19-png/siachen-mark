@@ -1,28 +1,27 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import PageHeader from "@/components/layout/PageHeader";
+import PortfolioHero from "@/components/sections/portfolio/PortfolioHero";
 import FeaturedProjects from "@/components/sections/portfolio/FeaturedProjects";
-import PortfolioCategories from "@/components/sections/portfolio/PortfolioCategories";
 import ClientResults from "@/components/sections/portfolio/ClientResults";
 import PortfolioTestimonials from "@/components/sections/portfolio/PortfolioTestimonials";
 import CTA from "@/components/sections/CTA";
+import { getPageMetadata } from "@/lib/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Portfolio — Siachen Mark",
-  description: "Case studies and client results from Siachen Mark. Real work, real outcomes.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMetadata(
+    "portfolio",
+    "Portfolio & Case Studies — Our Work",
+    "Client engagements across performance marketing, branding, web design, and SEO. See the work we do and the business problems we solve."
+  );
+}
 
 export default function PortfolioPage() {
   return (
     <>
       <Navbar />
       <main className="flex-1">
-        <PageHeader
-          title="Work That Speaks for Itself."
-          subtitle="A selection of projects across performance marketing, branding, web, and SEO."
-        />
-        <PortfolioCategories />
+        <PortfolioHero />
         <FeaturedProjects />
         <ClientResults />
         <PortfolioTestimonials />

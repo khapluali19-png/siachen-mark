@@ -20,7 +20,8 @@ export default function LoginPage() {
     setError("");
     const res = await signIn("credentials", { ...data, redirect: false });
     if (res?.error) { setError("Invalid email or password."); return; }
-    router.push("/dashboard");
+    // Let the server determine correct redirect based on role
+    window.location.href = "/auth/redirect";
   }
 
   return (
@@ -48,10 +49,16 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <div className="mt-4 text-center">
-          <a href="/forgot-password" className="text-xs text-[var(--color-muted)] hover:text-[var(--color-navy)] transition-colors">
+        <div className="mt-4 text-center space-y-2">
+          <a href="/forgot-password" className="block text-xs text-[var(--color-muted)] hover:text-[var(--color-navy)] transition-colors">
             Forgot password?
           </a>
+          <div className="text-xs text-[var(--color-muted)]">
+            Don&apos;t have an account?{" "}
+            <a href="/register" className="text-[var(--color-navy)] font-semibold hover:underline">
+              Sign up free
+            </a>
+          </div>
         </div>
       </div>
     </div>

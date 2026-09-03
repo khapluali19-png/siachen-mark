@@ -1,10 +1,10 @@
-import { MetadataRoute } from "next";
+﻿import { MetadataRoute } from "next";
+import { getSiteSettings } from "@/lib/settings";
 
-const BASE =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  "https://siachen-mark.vercel.app";
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const settings = await getSiteSettings();
+  const BASE = (settings.productionUrl || process.env.NEXT_PUBLIC_SITE_URL || "https://siachenmark.com").replace(/\/$/, "");
 
-export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
@@ -12,9 +12,16 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: [
           "/dashboard",
-          "/api",
+          "/dashboard/",
+          "/admin",
+          "/admin/",
+          "/api/",
           "/login",
+          "/register",
           "/reset-password",
+          "/forgot-password",
+          "/auth/",
+          "/user/",
         ],
       },
     ],

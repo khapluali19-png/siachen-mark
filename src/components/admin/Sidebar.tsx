@@ -4,20 +4,22 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { label: "Dashboard",    href: "/dashboard" },
-  { label: "Hero",         href: "/dashboard/hero" },
-  { label: "Services",     href: "/dashboard/services" },
-  { label: "Portfolio",    href: "/dashboard/portfolio" },
-  { label: "Testimonials", href: "/dashboard/testimonials" },
-  { label: "FAQ",          href: "/dashboard/faq" },
-  { label: "Team",         href: "/dashboard/team" },
-  { label: "Blog",         href: "/dashboard/blog" },
-  { label: "Careers",      href: "/dashboard/careers" },
-  { label: "SEO",          href: "/dashboard/seo" },
-  { label: "Media",        href: "/dashboard/media" },
-  { label: "Contacts",     href: "/dashboard/contacts" },
-  { label: "Newsletter",   href: "/dashboard/newsletter" },
-  { label: "Settings",     href: "/dashboard/settings" },
+  { label: "📊 Dashboard",   href: "/dashboard" },
+  { label: "👥 Users",       href: "/dashboard/users" },
+  { label: "🏠 Hero",        href: "/dashboard/hero" },
+  { label: "⚙️ Services",   href: "/dashboard/services" },
+  { label: "🗂️ Portfolio", href: "/dashboard/portfolio" },
+  { label: "🧭 Navigation", href: "/dashboard/navigation" },
+  { label: "⭐ Testimonials",href: "/dashboard/testimonials" },
+  { label: "❓ FAQ",         href: "/dashboard/faq" },
+  { label: "👤 Team",        href: "/dashboard/team" },
+  { label: "📝 Blog",        href: "/dashboard/blog" },
+  { label: "💼 Careers",     href: "/dashboard/careers" },
+  { label: "🔍 SEO",         href: "/dashboard/seo" },
+  { label: "🖼️ Media",     href: "/dashboard/media" },
+  { label: "📬 Contacts",    href: "/dashboard/contacts" },
+  { label: "📧 Newsletter",  href: "/dashboard/newsletter" },
+  { label: "⚙️ Settings",   href: "/dashboard/settings" },
 ];
 
 export default function Sidebar() {
@@ -50,6 +52,9 @@ export default function Sidebar() {
           })}
         </ul>
       </nav>
+      <div className="px-4 py-4 border-t border-[var(--color-navy-dim)]">
+        <a href="/api/auth/signout" className="text-xs text-[var(--color-on-navy)] hover:text-red-300 transition-colors">Sign out →</a>
+      </div>
     </aside>
   );
 }

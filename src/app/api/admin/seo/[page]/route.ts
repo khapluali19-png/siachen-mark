@@ -1,16 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 const schema = z.object({
-  title:       z.string().max(120).optional(),
-  description: z.string().max(320).optional(),
-  ogTitle:     z.string().max(120).optional(),
-  ogDesc:      z.string().max(320).optional(),
-  ogImage:     z.string().url().optional().or(z.literal("")),
-  canonical:   z.string().url().optional().or(z.literal("")),
-  robots:      z.string().max(80).optional(),
+  title: z.string().max(120).optional().or(z.literal("")),
+  description: z.string().max(320).optional().or(z.literal("")),
+  ogTitle: z.string().max(120).optional().or(z.literal("")),
+  ogDesc: z.string().max(320).optional().or(z.literal("")),
+  ogImage: z.string().url().optional().or(z.literal("")),
+  canonical: z.string().url().optional().or(z.literal("")),
+  robots: z.string().max(80).optional().or(z.literal("")),
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ page: string }> }) {
@@ -27,6 +28,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pa
     update: parsed.data,
     create: { page, ...parsed.data },
   });
+
+  try {
+    const routePath = page === "home" ? "/" : `/${page}`;
+    revalidatePath(routePath);
+    revalidatePath("/sitemap.xml");
+  } catch {
+    // Revalidation error ignored
+  }
 
   return NextResponse.json(meta);
 }
