@@ -1,29 +1,18 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthUser } from "@/lib/auth";
+import { checkAndExpireSubscription } from "@/lib/subscription";
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(req: NextRequest) {
+  const user = await getAuthUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      plan: true,
-      scanCount: true,
-      role: true,
-      createdAt: true,
-      lastLoginAt: true,
-    },
-  });
-
-  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+  const activeUser = await checkAndExpireSubscription(user.id);
+  const u = activeUser || user;
 
   const FREE_LIMIT = 10;
-  const remaining = user.plan === "UNLIMITED" ? null : Math.max(0, FREE_LIMIT - user.scanCount);
+  const remaining = u.plan === "UNLIMITED" ? null : Math.max(0, FREE_LIMIT - u.scanCount);
 
-  return NextResponse.json({ ...user, remaining, freeLimit: FREE_LIMIT });
+  return NextResponse.json({ ...u, remaining, freeLimit: FREE_LIMIT });
 }
+
+

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { checkAndExpireSubscription } from "@/lib/subscription";
 import { z } from "zod";
 
 const FREE_LIMIT = 10;
@@ -26,22 +27,15 @@ export async function POST(req: NextRequest) {
 
   const extToken = await db.extensionToken.findUnique({
     where: { token },
-    include: { user: { select: { id: true, plan: true, scanCount: true } } },
   });
 
   if (!extToken) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   if (extToken.revoked) return NextResponse.json({ error: "Token revoked" }, { status: 401 });
   if (extToken.expiresAt < new Date()) return NextResponse.json({ error: "Token expired" }, { status: 401 });
 
-  const { user } = extToken;
-
-  // Enforce plan limit server-side
-  if (user.plan === "FREE" && user.scanCount >= FREE_LIMIT) {
-    return NextResponse.json(
-      { error: "Free plan limit reached. Please upgrade to Unlimited.", limitReached: true },
-      { status: 403 }
-    );
-  }
+  // Evaluate real-time subscription status and expiration
+  const activeUser = await checkAndExpireSubscription(extToken.userId);
+  if (!activeUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   const body = await req.json();
   const parsed = scanSchema.safeParse(body);
@@ -49,19 +43,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 422 });
   }
 
+  // Atomic credit deduction for FREE or EXPIRED plan
+  if (activeUser.plan === "FREE") {
+    const updated = await db.user.updateMany({
+      where: {
+        id: activeUser.id,
+        plan: "FREE",
+        scanCount: { lt: FREE_LIMIT },
+      },
+      data: {
+        scanCount: { increment: 1 },
+      },
+    });
+
+    if (updated.count === 0) {
+      return NextResponse.json(
+        { error: "Free plan limit reached. Please upgrade to Unlimited.", limitReached: true },
+        { status: 403 }
+      );
+    }
+  }
+
   const { issuesCount = 0, ...rest } = parsed.data;
 
   const report = await db.auditReport.create({
-    data: { ...rest, issuesCount, userId: user.id },
+    data: { ...rest, issuesCount, userId: activeUser.id },
   });
 
-  await db.user.update({
-    where: { id: user.id },
-    data: { scanCount: { increment: 1 } },
-  });
-
-  const newCount = user.scanCount + 1;
-  const remaining = user.plan === "UNLIMITED" ? null : Math.max(0, FREE_LIMIT - newCount);
+  const freshUser = await checkAndExpireSubscription(activeUser.id);
+  const remaining = freshUser?.plan === "UNLIMITED" ? null : Math.max(0, FREE_LIMIT - (freshUser?.scanCount || 0));
 
   return NextResponse.json({ report, remaining }, { status: 201 });
 }

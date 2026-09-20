@@ -142,7 +142,7 @@ export default async function ServicesGrid() {
 
             return (
               <div
-                key={s.id || s.title}
+                key={(s as any).id || s.title}
                 className={`reveal reveal-delay-${(i % 2) + 1} premium-card group relative overflow-hidden border border-[var(--color-border)] rounded-[var(--radius-xl)] p-8 bg-white shadow-[var(--shadow-sm)] flex flex-col justify-between`}
               >
                 {/* hover glow */}

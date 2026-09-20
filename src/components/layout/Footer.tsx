@@ -18,6 +18,7 @@ const company = [
   { label: "Services", href: "/services" },
   { label: "Portfolio", href: "/portfolio" },
   { label: "Contact", href: "/contact" },
+  { label: "Chrome Extension", href: "/user/extension" },
 ];
 
 export default async function Footer() {

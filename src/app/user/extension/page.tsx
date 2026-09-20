@@ -32,13 +32,21 @@ export default async function UserExtensionPage() {
             </div>
           </div>
 
-          <div className="mt-5 pt-5 border-t border-[var(--color-border)]">
-            {/* Chrome Web Store button - placeholder until published */}
-            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-border)] bg-[var(--color-off-white)]">
-              <span className="text-2xl">🏪</span>
+          <div className="mt-5 pt-5 border-t border-[var(--color-border)] flex flex-wrap items-center gap-4">
+            <a
+              href="/downloads/siachen-mark-extension.zip"
+              download="siachen-mark-extension.zip"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-[var(--radius-lg)] bg-[var(--color-navy)] text-white font-bold text-sm hover:bg-[var(--color-navy-dim)] transition-colors shadow-md"
+            >
+              <span className="text-lg">⬇️</span> Download Extension (ZIP)
+            </a>
+            
+            {/* Chrome Web Store badge / note */}
+            <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-off-white)]">
+              <span className="text-xl">🏪</span>
               <div>
-                <p className="text-sm font-semibold text-[var(--color-navy)]">Chrome Web Store</p>
-                <p className="text-xs text-[var(--color-muted)]">Extension not yet published. Install manually (developer mode).</p>
+                <p className="text-xs font-semibold text-[var(--color-navy)]">Chrome Web Store</p>
+                <p className="text-[11px] text-[var(--color-muted)]">Pending Store approval. Use manual ZIP install below.</p>
               </div>
             </div>
           </div>
@@ -46,16 +54,17 @@ export default async function UserExtensionPage() {
 
         {/* Manual install instructions */}
         <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-background)] p-6">
-          <p className="font-semibold text-[var(--color-navy)] mb-4">📦 Manual Installation (Developer Mode)</p>
+          <p className="font-semibold text-[var(--color-navy)] mb-4">📦 Step-by-Step Installation Instructions</p>
           <ol className="space-y-3 text-sm text-[var(--color-muted)]">
             {[
-              "Download the extension folder from your project: F:\\Siachen mark office\\extension",
-              'Open Chrome and go to chrome://extensions',
-              'Enable "Developer mode" toggle (top right)',
-              'Click "Load unpacked" and select the extension folder',
-              "The Siachen Mark icon will appear in your Chrome toolbar",
-              "Click the icon → Enter your email and password to log in",
-              "Navigate to Google Maps and click Audit on any business",
+              'Click the "Download Extension (ZIP)" button above and save the file.',
+              'Extract the downloaded "siachen-mark-extension.zip" file to a folder on your computer.',
+              'Open Google Chrome and navigate to chrome://extensions (or Menu → Extensions → Manage Extensions).',
+              'Enable the "Developer mode" toggle switch in the top-right corner of the Extensions page.',
+              'Click the "Load unpacked" button in the top-left corner.',
+              'Select the unzipped folder containing manifest.json.',
+              'The Siachen Mark icon 🏔️ will appear in your Chrome extensions bar.',
+              'Click the icon, enter your account credentials to log in, then open Google Maps to start auditing!',
             ].map((step, i) => (
               <li key={i} className="flex gap-3">
                 <span className="w-5 h-5 rounded-full bg-[var(--color-navy)] text-white text-xs flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>

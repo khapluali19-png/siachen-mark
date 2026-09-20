@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { randomBytes } from "crypto";
+import { checkAndExpireSubscription } from "@/lib/subscription";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -37,18 +38,23 @@ export async function POST(req: NextRequest) {
     data: { lastLoginAt: new Date() },
   });
 
+  // Evaluate real-time subscription status and expiration
+  const subState = await checkAndExpireSubscription(user.id);
+  const activeUser = subState || user;
   const FREE_LIMIT = 10;
-  const remaining = user.plan === "UNLIMITED" ? null : Math.max(0, FREE_LIMIT - user.scanCount);
+  const remaining = activeUser.plan === "UNLIMITED" ? null : Math.max(0, FREE_LIMIT - activeUser.scanCount);
 
   return NextResponse.json({
     token,
     expiresAt: expiresAt.toISOString(),
     user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      plan: user.plan,
-      scanCount: user.scanCount,
+      id: activeUser.id,
+      name: activeUser.name,
+      email: activeUser.email,
+      plan: activeUser.plan,
+      subscriptionStatus: activeUser.subscriptionStatus,
+      subscriptionEnd: activeUser.subscriptionEnd,
+      scanCount: activeUser.scanCount,
       remaining,
     },
   });

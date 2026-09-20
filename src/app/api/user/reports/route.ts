@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 
@@ -19,12 +19,12 @@ const reportSchema = z.object({
   data:         z.record(z.any()),
 });
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(req: NextRequest) {
+  const user = await getAuthUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const reports = await db.auditReport.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -44,29 +44,35 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await getAuthUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Get fresh user data
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { plan: true, scanCount: true },
-  });
-
-  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
-  // Enforce free limit server-side
-  if (user.plan === "FREE" && user.scanCount >= FREE_LIMIT) {
-    return NextResponse.json(
-      { error: "Free plan limit reached. Upgrade to Unlimited for more scans.", limitReached: true },
-      { status: 403 }
-    );
-  }
 
   const body = await req.json();
   const parsed = reportSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 422 });
+  }
+
+  // Atomic credit deduction for FREE plan
+  if (user.plan === "FREE") {
+    const updated = await db.user.updateMany({
+      where: {
+        id: user.id,
+        plan: "FREE",
+        scanCount: { lt: FREE_LIMIT },
+      },
+      data: {
+        scanCount: { increment: 1 },
+      },
+    });
+
+    if (updated.count === 0) {
+      return NextResponse.json(
+        { error: "Free plan limit reached. Upgrade to Unlimited for more scans.", limitReached: true },
+        { status: 403 }
+      );
+    }
   }
 
   const { issuesCount = 0, ...rest } = parsed.data;
@@ -75,14 +81,8 @@ export async function POST(req: NextRequest) {
     data: {
       ...rest,
       issuesCount,
-      userId: session.user.id,
+      userId: user.id,
     },
-  });
-
-  // Increment scan count
-  await db.user.update({
-    where: { id: session.user.id },
-    data: { scanCount: { increment: 1 } },
   });
 
   return NextResponse.json(report, { status: 201 });

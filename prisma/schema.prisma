@@ -14,17 +14,21 @@ model User {
   emailVerified   DateTime?
   password        String?
   role            Role             @default(EDITOR)
-  plan            Plan             @default(FREE)
-  scanCount       Int              @default(0)
-  lastLoginAt     DateTime?
-  image           String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  plan               Plan             @default(FREE)
+  subscriptionStatus String?
+  subscriptionStart  DateTime?
+  subscriptionEnd    DateTime?
+  scanCount          Int              @default(0)
+  lastLoginAt        DateTime?
+  image              String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
   accounts        Account[]
   passwordResets  PasswordReset[]
   sessions        Session[]
   auditReports    AuditReport[]
   extensionTokens ExtensionToken[]
+  paymentRequests PaymentRequest[]
 
   @@index([email])
   @@index([plan])
@@ -386,3 +390,33 @@ enum LeadStatus {
   IN_PROGRESS
   CLOSED
 }
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model PaymentRequest {
+  id              String        @id @default(cuid())
+  userId          String
+  amount          Float         @default(1000)
+  paymentMethod   String        @default("EASYPAISA")
+  senderName      String
+  transactionId   String
+  paymentDate     DateTime      @default(now())
+  screenshotUrl   String
+  status          PaymentStatus @default(PENDING)
+  rejectionReason String?
+  reviewedAt      DateTime?
+  reviewedBy      String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+

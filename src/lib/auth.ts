@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { NextRequest } from "next/server";
 
 declare module "next-auth" {
   interface Session {
@@ -78,4 +79,36 @@ export const authOptions: NextAuthOptions = {
 
 export async function auth() {
   return await getServerSession(authOptions);
+}
+
+export async function getAuthUser(req?: NextRequest) {
+  const session = await auth();
+  if (session?.user?.id) {
+    const user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, name: true, email: true, plan: true, scanCount: true, role: true, emailVerified: true },
+    });
+    if (user) return user;
+  }
+
+  if (req) {
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.replace("Bearer ", "")?.trim();
+    if (token) {
+      const extToken = await db.extensionToken.findUnique({
+        where: { token },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, plan: true, scanCount: true, role: true, emailVerified: true },
+          },
+        },
+      });
+
+      if (extToken && !extToken.revoked && extToken.expiresAt > new Date()) {
+        return extToken.user;
+      }
+    }
+  }
+
+  return null;
 }
